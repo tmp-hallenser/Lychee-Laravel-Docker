@@ -1,43 +1,40 @@
-FROM debian:buster-slim
+FROM nginx:alpine
 
 # Set version label
-LABEL maintainer="bigrob8181"
+LABEL maintainer="bigrob8181, tmp-hallenser"
 
 # Environment variables
-ENV PUID='1000'
-ENV PGID='1000'
-ENV USER='lychee'
 ENV PHP_TZ=America/New_York
-
-# Add User and Group
-RUN \
-    addgroup --gid "$PGID" "$USER" && \
-    adduser --gecos '' --no-create-home --disabled-password --uid "$PUID" --gid "$PGID" "$USER"
+ENV PHP_MAX_EXECUTION_TIME='200'
+ENV PHP_POST_MAX_SIZE='100M'
+ENV PHP_UPLOAD_MAX_FILESIZE='20M'
+ENV PHP_MEMORY_LIMIT='256M'
 
 # Install base dependencies, clone the repo and install php libraries
 RUN \
-    apt-get update && \
-    apt-get install -y \
-    nginx-light \
-    php7.3-mysql \
-    php7.3-imagick \
-    php7.3-mbstring \
-    php7.3-json \
-    php7.3-gd \
-    php7.3-xml \
-    php7.3-zip \
-    php7.3-fpm \
+    apk update && \
+    apk add \
+    php7  \
+    php7-pdo_mysql \
+    php7-pecl-imagick \
+    php7-mbstring \
+    php7-gd \
+    php7-xml \
+    php7-zip \
+    php7-fpm \
+    php7-exif \
+    php7-json \
+    php7-fileinfo \
+    php7-tokenizer \
+    php7-session \
     git \
     composer && \
-    cd /var/www/html && \
+    cd /usr/share/nginx/html/ && \
     git clone --recurse-submodules https://github.com/LycheeOrg/Lychee-Laravel.git && \
-    apt-get install -y composer && \
-    cd /var/www/html/Lychee-Laravel && \
+    cd /usr/share/nginx/html/Lychee-Laravel && \
     composer install --no-dev && \
-    chown -R www-data:www-data /var/www/html/Lychee-Laravel && \
-    apt-get purge -y git composer && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+    apk del composer && \
+    rm -rf /var/cache/apk/*
 
 # Add custom site to apache
 COPY default.conf /etc/nginx/nginx.conf
@@ -45,14 +42,16 @@ COPY default.conf /etc/nginx/nginx.conf
 EXPOSE 80
 VOLUME /conf /uploads
 
-WORKDIR /var/www/html/Lychee-Laravel
+WORKDIR /usr/share/nginx/html/Lychee-Laravel
 
-COPY entrypoint.sh inject.sh /
+COPY entrypoint.sh inject.sh wait-for-it/wait-for-it.sh /
 
 RUN chmod +x /entrypoint.sh && \
     chmod +x /inject.sh && \
+    chmod +x /wait-for-it.sh && \
     mkdir /run/php
 
-ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT [ "/wait-for-it.sh", "mysql:3306", "-t", "0", "--", "/entrypoint.sh" ]
 
 CMD [ "nginx" ]
+

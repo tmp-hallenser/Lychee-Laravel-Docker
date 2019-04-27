@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 if [ "$APP_NAME" != '' ]; then
     sed -i "s|APP_NAME=.*|APP_NAME=${APP_NAME}|i" /conf/.env
 fi
@@ -96,5 +96,22 @@ if [ "$PUSHER_APP_CLUSTER" != '' ]; then
     sed -i "s|PUSHER_APP_CLUSTER=.*|PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER}|i" /conf/.env
 fi
 if [ "$PHP_TZ" != '' ]; then
-    sed -i "s|;*date.timezone =.*|date.timezone = ${PHP_TZ}|i" /etc/php/7.3/cli/php.ini
+    sed -i "s|;*date.timezone =.*|date.timezone = ${PHP_TZ}|i" /etc/php7/php.ini
 fi
+if [ "$PHP_MAX_EXECUTION_TIME" != '' ]; then
+    sed -i "s|;*max_execution_time =.*|max_execution_time = ${PHP_MAX_EXECUTION_TIME}|i" /etc/php7/php.ini
+fi
+if [ "$PHP_POST_MAX_SIZE" != '' ]; then
+    sed -i "s|;*post_max_size =.*|post_max_size = ${PHP_POST_MAX_SIZE}|i" /etc/php7/php.ini
+fi
+if [ "$PHP_UPLOAD_MAX_FILESIZE" != '' ]; then
+    sed -i "s|;*upload_max_filesize =.*|upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}|i" /etc/php7/php.ini
+fi
+if [ "$PHP_MEMORY_LIMIT" != '' ]; then
+    sed -i "s|;*memory_limit =.*|memory_limit = ${PHP_MEMORY_LIMIT}|i" /etc/php7/php.ini
+fi
+
+# PHP-FPM adjustments
+sed -i "s|;*user =.*|user = nginx|i" /etc/php7/php-fpm.d/www.conf
+sed -i "s|;*group =.*|group = nginx|i" /etc/php7/php-fpm.d/www.conf
+
