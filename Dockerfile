@@ -27,6 +27,7 @@ RUN \
     php7-fileinfo \
     php7-tokenizer \
     php7-session \
+    ffmpeg \ 
     git \
     composer && \
     cd /usr/share/nginx/html/ && \
